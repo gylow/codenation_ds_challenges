@@ -234,21 +234,10 @@ stars.info()
 stars.describe()
 
 
-# In[46]:
-
-
-aux = stars[stars['target']==False]['mean_profile']
-false_pulsar_mean_profile_standardized = (aux - aux.mean())/aux.std()
-prof_q1 = false_pulsar_mean_profile_standardized.quantile(.25)
-prof_q2 = false_pulsar_mean_profile_standardized.quantile(.50)
-prof_q3 = false_pulsar_mean_profile_standardized.quantile(.75)
-prof_qs = pd.Series((prof_q1, prof_q2, prof_q3))
-prof_qs
-
-
 # In[91]:
 
 
+#Testes para a questão 4
 aux = stars[stars['target']==False]['mean_profile']
 false_pulsar_mean_profile_standardized = (aux - aux.mean())/aux.std()
 false_pulsar_mean_profile_standardized
@@ -257,15 +246,25 @@ false_pulsar_mean_profile_standardized
 # In[92]:
 
 
+#quantis teóricos
 quant_80 = sct.norm.ppf(0.80, loc=0, scale=1)
 quant_90 = sct.norm.ppf(0.90, loc=0, scale=1)
 quant_95 = sct.norm.ppf(0.95, loc=0, scale=1)
 quant_80, quant_90, quant_95
 
 
+# In[110]:
+
+
+# outra forma de obter os quantis teóricos
+teoric_qnt = pd.Series(map(lambda qnt: sct.norm.ppf(qnt, loc=0, scale=1),[.8, .9, .95]))
+teoric_qnt
+
+
 # In[95]:
 
 
+# probabilidade associadas a esses quantis utilizando a CDF empírica
 ecdf = ECDF(false_pulsar_mean_profile_standardized)
 pdf_80 = round(ecdf(quant_80), 3)
 pdf_90 = round(ecdf(quant_90), 3)
@@ -273,19 +272,60 @@ pdf_95 = round(ecdf(quant_95), 3)
 pdf_80, pdf_90, pdf_95
 
 
-# In[47]:
+# In[111]:
+
+
+# outra forma de obter probabilidade associadas a esses quantis utilizando a CDF empírica
+# utilizando map e lambda
+emp_cdf = pd.Series(map(lambda qnt: ecdf(qnt), teoric_qnt))
+emp_cdf
+
+
+# In[97]:
+
+
+# Testes para a questão 5
+# Encontrando os Quartis
+aux = stars[stars['target']==False]['mean_profile']
+false_pulsar_mean_profile_standardized = (aux - aux.mean())/aux.std()
+
+prof_q1 = false_pulsar_mean_profile_standardized.quantile(.25)
+prof_q2 = false_pulsar_mean_profile_standardized.quantile(.50)
+prof_q3 = false_pulsar_mean_profile_standardized.quantile(.75)
+prof_qs = pd.Series((prof_q1, prof_q2, prof_q3))
+prof_qs
+
+
+# In[107]:
+
+
+# Encontando os quartis com o map e lambda
+prof_qs = pd.Series(map(lambda qnt: false_pulsar_mean_profile_standardized.quantile(qnt), [.25, .5, .75]))
+prof_qs
+
+
+# In[124]:
+
+
+# Encontrando os quartis com for in
+prof_qs = pd.Series([false_pulsar_mean_profile_standardized.quantile(qnt) for qnt in [.25, .5, .75]])
+prof_qs
+
+
+# In[123]:
 
 
 dist_norm_q1 = sct.norm.ppf(0.25, loc=0, scale=1)
 dist_norm_q2 = sct.norm.ppf(0.50, loc=0, scale=1)
 dist_norm_q3 = sct.norm.ppf(0.75, loc=0, scale=1)
-dist_nomr_qs = pd.Series((dist_norm_q1, dist_norm_q2, dist_norm_q3))
+dist_nomr_qs = pd.Series([dist_norm_q1, dist_norm_q2, dist_norm_q3])
 dist_nomr_qs
 
 
-# In[52]:
+# In[125]:
 
 
+# Testando o formato da resposta
 tuple((prof_qs - dist_nomr_qs).round(3))
 
 
@@ -302,24 +342,19 @@ tuple((prof_qs - dist_nomr_qs).round(3))
 # 
 # Quais as probabilidade associadas a esses quantis utilizando a CDF empírica da variável `false_pulsar_mean_profile_standardized`? Responda como uma tupla de três elementos arredondados para três casas decimais.
 
-# In[96]:
+# In[114]:
 
 
 def q4():
     # Retorne aqui o resultado da questão 4.
     aux = stars[stars['target']==False]['mean_profile']
     false_pulsar_mean_profile_standardized = (aux - aux.mean())/aux.std()
-
-    quant_80 = sct.norm.ppf(0.80, loc=0, scale=1)
-    quant_90 = sct.norm.ppf(0.90, loc=0, scale=1)
-    quant_95 = sct.norm.ppf(0.95, loc=0, scale=1)
-
     ecdf = ECDF(false_pulsar_mean_profile_standardized)
-    pdf_80 = round(ecdf(quant_80), 3)
-    pdf_90 = round(ecdf(quant_90), 3)
-    pdf_95 = round(ecdf(quant_95), 3)
+
+    teoric_qnt = pd.Series([sct.norm.ppf(qnt) for qnt in [.8, .9, .95]])
+    emp_cdf = pd.Series([ecdf(qnt) for qnt in teoric_qnt])
     
-    return (pdf_80, pdf_90, pdf_95)
+    return tuple(emp_cdf.round(3))
 
 
 # Para refletir:
@@ -331,23 +366,17 @@ def q4():
 # 
 # Qual a diferença entre os quantis Q1, Q2 e Q3 de `false_pulsar_mean_profile_standardized` e os mesmos quantis teóricos de uma distribuição normal de média 0 e variância 1? Responda como uma tupla de três elementos arredondados para três casas decimais.
 
-# In[55]:
+# In[120]:
 
 
 def q5():
     # Retorne aqui o resultado da questão 5.
     aux = stars[stars['target']==False]['mean_profile']
     false_pulsar_mean_profile_standardized = (aux - aux.mean())/aux.std()
-
-    prof_q1 = false_pulsar_mean_profile_standardized.quantile(.25)
-    prof_q2 = false_pulsar_mean_profile_standardized.quantile(.50)
-    prof_q3 = false_pulsar_mean_profile_standardized.quantile(.75)
-    prof_qs = pd.Series((prof_q1, prof_q2, prof_q3))
+    quantiles = [0.25, 0.50, 0.75]
     
-    dist_norm_q1 = sct.norm.ppf(0.25, loc=0, scale=1)
-    dist_norm_q2 = sct.norm.ppf(0.50, loc=0, scale=1)
-    dist_norm_q3 = sct.norm.ppf(0.75, loc=0, scale=1)
-    dist_nomr_qs = pd.Series((dist_norm_q1, dist_norm_q2, dist_norm_q3))
+    prof_qs = pd.Series([false_pulsar_mean_profile_standardized.quantile(qnt) for qnt in quantiles])
+    dist_nomr_qs = pd.Series([sct.norm.ppf(qnt) for qnt in quantiles])
     
     return tuple((prof_qs - dist_nomr_qs).round(3))
 
