@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.7.7, pytest-5.4.3, py-1.8.2, pluggy-0.13.1 -- /opt/anaconda3/envs/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/Vinicius/codenation/data-science-1
+collecting ... collected 5 items
+
+test_submit.py::test_q1 PASSED                                           [ 20%]
+test_submit.py::test_q2 PASSED                                           [ 40%]
+test_submit.py::test_q3 PASSED                                           [ 60%]
+test_submit.py::test_q4 PASSED                                           [ 80%]
+test_submit.py::test_q5 PASSED                                           [100%]
+
+=============================== warnings summary ===============================
+/opt/anaconda3/envs/venv/lib/python3.7/site-packages/_pytest/junitxml.py:417
+  /opt/anaconda3/envs/venv/lib/python3.7/site-packages/_pytest/junitxml.py:417: PytestDeprecationWarning: The 'junit_family' default value will change to 'xunit2' in pytest 6.0.
+  Add 'junit_family=xunit1' to your pytest.ini file to keep the current format in future versions of pytest and silence this warning.
+    _issue_warning_captured(deprecated.JUNIT_XML_DEFAULT_FAMILY, config.hook, 2)
+
+-- Docs: https://docs.pytest.org/en/latest/warnings.html
+--- generated xml file: /Users/Vinicius/codenation/data-science-1/output.xml ---
+========================= 5 passed, 1 warning in 2.21s =========================
