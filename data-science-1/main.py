@@ -98,7 +98,7 @@ binom_max = round(df.binomial.max())
 
 
 
-# In[9]:
+# In[60]:
 
 
 media = df.normal.mean()
@@ -106,6 +106,23 @@ desvio_p = df.normal.std()
 prob_inf = sct.norm.cdf((media-desvio_p),media,desvio_p)
 prob_sup = sct.norm.cdf((media+desvio_p),media,desvio_p)
 prob_sup - prob_inf
+
+
+# In[87]:
+
+
+ecdf = ECDF(dataframe.normal)
+media = dataframe.normal.mean()
+desvio_p = dataframe.normal.std()
+prob_inf = ecdf(media-desvio_p)
+prob_sup = ecdf(media+desvio_p)
+prob_sup - prob_inf
+
+
+# In[70]:
+
+
+df.normal.mean()
 
 
 # In[10]:
@@ -122,13 +139,14 @@ tuple((binomial_m_v - normal_m_v).round(3))
 # 
 # Em outra palavras, sejam `q1_norm`, `q2_norm` e `q3_norm` os quantis da variável `normal` e `q1_binom`, `q2_binom` e `q3_binom` os quantis da variável `binom`, qual a diferença `(q1_norm - q1 binom, q2_norm - q2_binom, q3_norm - q3_binom)`?
 
-# In[11]:
+# In[89]:
 
 
 def q1():
     # Retorne aqui o resultado da questão 1.
     binomial_qts = dataframe.binomial.quantile([0.25, 0.50, 0.75])
     normal_qts = dataframe.normal.quantile([0.25, 0.50, 0.75])
+    
     return tuple((normal_qts - binomial_qts).round(3))
 
 
@@ -142,15 +160,18 @@ def q1():
 # 
 # Considere o intervalo $[\bar{x} - s, \bar{x} + s]$, onde $\bar{x}$ é a média amostral e $s$ é o desvio padrão. Qual a probabilidade nesse intervalo, calculada pela função de distribuição acumulada empírica (CDF empírica) da variável `normal`? Responda como uma único escalar arredondado para três casas decimais.
 
-# In[12]:
+# In[88]:
 
 
 def q2():
     # Retorne aqui o resultado da questão 2.
     media = dataframe.normal.mean()
     desvio_p = dataframe.normal.std()
-    prob_inf = sct.norm.cdf((media-desvio_p),media,desvio_p)
-    prob_sup = sct.norm.cdf((media+desvio_p),media,desvio_p)
+    ecdf = ECDF(dataframe.normal)
+
+    prob_inf = ecdf(media-desvio_p)
+    prob_sup = ecdf(media+desvio_p)
+
     return float(prob_sup - prob_inf)
 
 
@@ -225,6 +246,33 @@ prof_qs = pd.Series((prof_q1, prof_q2, prof_q3))
 prof_qs
 
 
+# In[91]:
+
+
+aux = stars[stars['target']==False]['mean_profile']
+false_pulsar_mean_profile_standardized = (aux - aux.mean())/aux.std()
+false_pulsar_mean_profile_standardized
+
+
+# In[92]:
+
+
+quant_80 = sct.norm.ppf(0.80, loc=0, scale=1)
+quant_90 = sct.norm.ppf(0.90, loc=0, scale=1)
+quant_95 = sct.norm.ppf(0.95, loc=0, scale=1)
+quant_80, quant_90, quant_95
+
+
+# In[95]:
+
+
+ecdf = ECDF(false_pulsar_mean_profile_standardized)
+pdf_80 = round(ecdf(quant_80), 3)
+pdf_90 = round(ecdf(quant_90), 3)
+pdf_95 = round(ecdf(quant_95), 3)
+pdf_80, pdf_90, pdf_95
+
+
 # In[47]:
 
 
@@ -254,7 +302,7 @@ tuple((prof_qs - dist_nomr_qs).round(3))
 # 
 # Quais as probabilidade associadas a esses quantis utilizando a CDF empírica da variável `false_pulsar_mean_profile_standardized`? Responda como uma tupla de três elementos arredondados para três casas decimais.
 
-# In[54]:
+# In[96]:
 
 
 def q4():
@@ -266,11 +314,10 @@ def q4():
     quant_90 = sct.norm.ppf(0.90, loc=0, scale=1)
     quant_95 = sct.norm.ppf(0.95, loc=0, scale=1)
 
-    emp_mean = false_pulsar_mean_profile_standardized.mean()
-    emp_std = false_pulsar_mean_profile_standardized.std()
-    pdf_80 = round(sct.norm.cdf(quant_80, loc=emp_mean, scale=emp_std), 3)
-    pdf_90 = round(sct.norm.cdf(quant_90, loc=emp_mean, scale=emp_std), 3)
-    pdf_95 = round(sct.norm.cdf(quant_95, loc=emp_mean, scale=emp_std), 3)
+    ecdf = ECDF(false_pulsar_mean_profile_standardized)
+    pdf_80 = round(ecdf(quant_80), 3)
+    pdf_90 = round(ecdf(quant_90), 3)
+    pdf_95 = round(ecdf(quant_95), 3)
     
     return (pdf_80, pdf_90, pdf_95)
 
