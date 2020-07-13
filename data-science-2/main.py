@@ -38,6 +38,8 @@ sns.set()
 
 
 athletes = pd.read_csv("athletes.csv")
+REJECT_H0 = False
+ALPHA = 0.05
 
 
 # In[9]:
@@ -215,12 +217,12 @@ sct.ttest_ind(usa.height, can.height, equal_var=False, nan_policy='omit')
 
 def q1():
     # Retorne aqui o resultado da questão 1.
-    reject = False
-    alpha  = 0.05
+    # REJECT_H0 e ALPHA são globais de valores False e 0.05
     s_heights = get_sample(athletes, 'height', n=3000)
-    sw_statistic, p_value = sct.shapiro(s_heights)
+    p_value = sct.shapiro(s_heights)[1]
+    is_normal = not REJECT_H0 if p_value > ALPHA else REJECT_H0
 
-    return not reject if p_value > alpha else reject
+    return is_normal
 
 
 # __Para refletir__:
@@ -238,12 +240,12 @@ def q1():
 
 def q2():
     # Retorne aqui o resultado da questão 2.
-    reject = False
-    alpha  = 0.05
+    # REJECT_H0 e ALPHA são globais de valores False e 0.05
     s_height = get_sample(athletes, 'height', n=3000)
-    jb_statistic, p_value = sct.jarque_bera(s_height)
-    
-    return not reject if p_value > alpha else reject
+    p_value = sct.jarque_bera(s_height)[1]
+    is_normal = not REJECT_H0 if p_value > ALPHA else REJECT_H0
+
+    return is_normal
 
 
 # __Para refletir__:
@@ -259,12 +261,12 @@ def q2():
 
 def q3():
     # Retorne aqui o resultado da questão 3.
-    reject = False
-    alpha  = 0.05
+    # REJECT_H0 e ALPHA são globais de valores False e 0.05
     s_weight = get_sample(athletes, "weight", n=3000)
-    statistic, p_value = sct.normaltest(s_weight)
-    
-    return not reject if p_value > alpha else reject
+    p_value = sct.normaltest(s_weight)[1]
+    is_normal = not REJECT_H0 if p_value > ALPHA else REJECT_H0
+
+    return is_normal
 
 
 # __Para refletir__:
@@ -281,13 +283,13 @@ def q3():
 
 def q4():
     # Retorne aqui o resultado da questão 4.
-    reject = False
-    alpha  = 0.05
+    # REJECT_H0 e ALPHA são globais de valores False e 0.05
     s_weight = get_sample(athletes, "weight", n=3000)
     s_weight_log = np.log(s_weight)
-    statistic, p_value = sct.normaltest(s_weight_log)
-    
-    return not reject if p_value > alpha else reject
+    p_value = sct.normaltest(s_weight_log)[1]
+    is_normal = not REJECT_H0 if p_value > ALPHA else REJECT_H0
+
+    return is_normal
 
 
 # __Para refletir__:
@@ -306,16 +308,16 @@ def q4():
 
 def q5():
     # Retorne aqui o resultado da questão 5.
-    reject = False
-    alpha  = 0.05
+    # REJECT_H0 e ALPHA são globais de valores False e 0.05
     bra = athletes[athletes['nationality'] == 'BRA']
     bra_smp_height = get_sample(bra, 'height')
     usa = athletes[athletes['nationality'] == 'USA']
     usa_smp_height = get_sample(usa, 'height')
    
-    statistic, p_value = sct.ttest_ind(bra_smp_height, usa_smp_height, equal_var=False)
+    p_value = sct.ttest_ind(bra_smp_height, usa_smp_height, equal_var=False)[1]
+    is_normal = not REJECT_H0 if p_value > ALPHA else REJECT_H0
 
-    return not reject if p_value > alpha else reject
+    return is_normal
 
 
 # ## Questão 6
@@ -327,16 +329,18 @@ def q5():
 
 def q6():
     # Retorne aqui o resultado da questão 6.
-    reject = False
-    alpha  = 0.05
+    # REJECT_H0 e ALPHA são globais de valores False e 0.05
     bra = athletes[athletes['nationality'] == 'BRA']
     bra_smp_height = get_sample(bra, 'height')
     can = athletes[athletes['nationality'] == 'CAN']
     can_smp_height = get_sample(can, 'height')
 
-    statistic, p_value = sct.ttest_ind(bra_smp_height, can_smp_height, equal_var=False)
-    
-    return not reject if p_value > alpha else reject
+    p_value = sct.ttest_ind(bra_smp_height, 
+                            can_smp_height, 
+                            equal_var=False)[1]
+    is_normal = not REJECT_H0 if p_value > ALPHA else REJECT_H0
+
+    return is_normal
 
 
 # ## Questão 7
@@ -351,8 +355,10 @@ def q7():
     usa = athletes[athletes['nationality'] == 'USA']
     can = athletes[athletes['nationality'] == 'CAN']
     
-    statistic, p_value = sct.ttest_ind(usa.height, can.height, 
-                            equal_var=False, nan_policy='omit')
+    p_value = sct.ttest_ind(usa.height, 
+                            can.height, 
+                            equal_var=False, 
+                            nan_policy='omit')[1]
     
     return float(p_value.round(8))
 
