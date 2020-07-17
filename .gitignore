@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# codenation files
+**/stdout.txt
+**/output.xml
+
+# dataframes
+**/*.csv
+
+.DS_Store
