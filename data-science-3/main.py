@@ -113,13 +113,13 @@ pca_95.fit(fifa)
 np.cumsum(pca_95.explained_variance_ratio_)
 
 
-# In[177]:
+# In[184]:
 
 
 # Análise da questão 3
 pca_x = PCA(n_components=2)
 pca_x.fit(fifa)
-#sns.scatterplot(pca_x.components_[0], pca_x.components_[1]);
+sns.scatterplot(pca_x.components_[0], pca_x.components_[1])
 #sns.scatterplot([x[0]], [x[1]]);
 
 
@@ -179,7 +179,7 @@ def q2():
 # 
 # Qual são as coordenadas (primeiro e segundo componentes principais) do ponto `x` abaixo? O vetor abaixo já está centralizado. Cuidado para __não__ centralizar o vetor novamente (por exemplo, invocando `PCA.transform()` nele). Responda como uma tupla de float arredondados para três casas decimais.
 
-# In[172]:
+# In[183]:
 
 
 x = [0.87747123,  -1.24990363,  -1.3191255, -36.7341814,
@@ -202,8 +202,8 @@ def q3():
     # Retorne aqui o resultado da questão 3.
     pca_x = PCA(n_components=2)
     pca_x.fit(fifa)
-    x_coord = pca_x.components_.dot(x).round(3)
-    return tuple(x_coord)
+    x_coord_1, x_coord_2 = pca_x.components_.dot(x).round(3)
+    return (x_coord_1, x_coord_2)
 
 
 # ## Questão 4
@@ -215,11 +215,10 @@ def q3():
 
 def q4():
     # Retorne aqui o resultado da questão 4.
-    reg = LinearRegression()
     y = fifa.Overall
     x = fifa.drop(columns='Overall')
-    rfe = RFE(reg, n_features_to_select=1)
-    selector = rfe.fit(x, y)
-    ranking = pd.Series(x.columns, index=selector.ranking_)
-    return ranking.sort_index().head().to_list()
+    rfe = RFE(LinearRegression(), n_features_to_select=5)
+    rfe.fit(x, y)
+    best_5_columns = x.columns[rfe.get_support()]
+    return best_5_columns.to_list()
 
