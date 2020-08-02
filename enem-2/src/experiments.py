@@ -7,11 +7,11 @@ from sklearn.svm import SVR
 from catboost import CatBoostRegressor
 
 from preprocessing import Preprocessing
-from data_source import DataSource 
+#from data_source import DataSource 
 from metrics import Metrics
 
 class Experiments:
-    def __init__(self):
+    def __init__(self, data):
         self.tested_algorithms = {'linear' : LinearRegression(),
                                   'ridge' : Ridge(), 
                                   'decision_tree' : DecisionTreeRegressor(), 
@@ -19,6 +19,7 @@ class Experiments:
                                   'svm': SVR(),
                                   'catboost': CatBoostRegressor()}
         self.dict_of_models = None
+        self.data = data
         # TODO implementar hiperparametros
         
     def train_model(self, X_train, y_train):
@@ -45,16 +46,23 @@ class Experiments:
         :return: Dict with metrics
         '''
         pre = Preprocessing()
-        print('Reading Data')
-        train_df = DataSource().read_data(etapa_treino = True)
-        test_df, y_test = DataSource().read_data(etapa_treino = False)
+        print('Reading Data') 
+        train_df = self.data.read_data(etapa_treino = True)
+        test_df, y_test = self.data.read_data(etapa_treino = False)
         y_test = y_test['SalePrice'] # TODO passar como parametro
         print('Preprocessing Data')
-        X_train, y_train = pre.process(train_df, etapa_treino = True)
+        X_train, y_train = pre.process(
+                train_df
+                , id=self.data.id
+                , target=self.data.target
+                , etapa_treino = True)
         print('Processing Test Data')
-        X_test = pre.process(test_df[pre.train_features], etapa_treino=False)
+        X_test = pre.process(
+                test_df[pre.train_features]
+                , id=self.data.id
+                , etapa_treino=False)
         print('Training Model')
-        models = Experiments().train_model(X_train, y_train)
+        models = self.train_model(X_train, y_train)
         print('Running Metrics')
         for model in models.keys():
             print(model)
