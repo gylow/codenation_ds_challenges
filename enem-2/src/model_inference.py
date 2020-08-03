@@ -26,7 +26,7 @@ class ModelInference:
         X_test = self.modelo['preprocessing'].process(is_train_stage=False)
 
         # Redundante, modelo não funciona com NA
-        print(f'Quantidade de NA: {X_test.isna().sum()}')
+        # print(f'Quantidade de NA: {X_test.isna().sum()}')
 
         print('Predicting')
         # TODO verificar mudanças no contexto dos dados de produção
