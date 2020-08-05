@@ -33,7 +33,7 @@ class ModelTraining:
         model_obj.fit(X_train, y_train)
         model = {'model_obj' : model_obj,
                  'preprocessing' : self.pre,
-                 'colunas' : self.pre.feature_names }
+                 'colunas' : self.pre.get_feature_names() }
         
         #print(model)
         dump(model, '../output/modelo.pkl')
