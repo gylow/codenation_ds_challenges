@@ -7,6 +7,7 @@ class DataSource:
                  name_id=None,
                  name_target=None,
                  rows_remove=None,
+                 outliers_remove=None,
                  name_csv_label='label',
                  name_csv_train='train',
                  name_csv_test='test',
@@ -16,6 +17,7 @@ class DataSource:
         :param name_id: String with unique id column name.
         :param name_target: String with target column name in train dataframe.
         :param rows_remove: List of tuple(label, value_corresp) with the rows condictions to remove from Train data frame
+        :param outliers_remove: List of tuple(label, value_corresp) with the rows condictions to remove from Train data frame
         :param name_csv_label: String with test target archive name without ".csv".
         :param name_csv_train: String with train archive name without ".csv".
         :param name_csv_test: String with test archive name without ".csv".
@@ -27,6 +29,7 @@ class DataSource:
         self.path_label = f'../data/{name_csv_label}.csv'
         self.path_predict = f'../data/{name_csv_predict}.csv'
         self.rows_remove = rows_remove
+        self.outliers_remove = outliers_remove
         self.name_id = name_id
         self.name_target = name_target
         # TODO definir um seed padrão
@@ -40,8 +43,12 @@ class DataSource:
         '''
         df = pd.read_csv(self.path_train if is_train_stage else self.path_test)
 
-        if self.rows_remove is not None and not original:
+        if self.rows_remove and not original:
             for label, x in self.rows_remove :
+                df = df[df[label] != x]
+
+        if is_train_stage and self.outliers_remove:
+            for label, x in self.outliers_remove :
                 df = df[df[label] != x]
 
         return df

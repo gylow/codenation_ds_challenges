@@ -1,22 +1,27 @@
 import pandas as pd
 import category_encoders as ce
 from sklearn.decomposition import PCA
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.feature_selection import RFE
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 
 
 class Preprocessing:
-    def __init__(self, data, col_analise=False):
+    def __init__(self, data, col_analise=None, rfe=None, pca=None ):
         self.features_categoric = None
         self.features_numeric = None
         self.scaler = None
         self.catb = None
         self.data = data
+        self.rfe = rfe
+        self.pca = pca
         self.col_analise = col_analise
         '''
         Class for preprocessing data model.
         :param data: DataSource object
+        :param rfe: String with estimator: 'LR' or 'DT' for LinearRegression or DecisionTreeRegressor
+        :param pca: Int, Float. Int for n_components to keep and Float for percetage specified by n_components
         :param col_analise: List with: col_name : String,
                                         var_type : None, 'cat' or 'num'
                                         fillna : Int or Float,
@@ -119,23 +124,24 @@ class Preprocessing:
         :param feat_cat: List[String] with unselected categoric features
         :return: List[String] with selected numeric features, List[String] with selected categoric features
         '''
-
-
-
-
+        
         df[feat_num] = StandardScaler().fit_transform(df[feat_num])
         df[feat_cat] = ce.CatBoostEncoder(cols=feat_cat).fit_transform(
             df[feat_cat], y=y)
 
-        pca = PCA(0.95).fit(df[feat_num+feat_cat])
-        pca_n = pca.n_components_
-        print(f'N components PCA: {pca.n_components_}')
+        if self.pca:
+            pca = PCA(self.pca).fit(df[feat_num+feat_cat])
+            n_components = pca.n_components_
+        else:
+            n_components = int(len(feat_num+feat_cat)/2)
 
-        selection = RFE(LinearRegression(), n_features_to_select= pca_n)
+        model = DecisionTreeRegressor() if self.rfe == 'DT' else LinearRegression()
+
+        selection = RFE(model, n_features_to_select=n_components)
         selection.fit(df[feat_num+feat_cat], y=y)
         selected = df[feat_num +
                       feat_cat].columns[selection.get_support()]
-
+        
         for feat in feat_num:
             if feat not in selected:
                 feat_num.remove(feat)
@@ -160,10 +166,11 @@ class Preprocessing:
         y = df[self.data.name_target].fillna(0)
         df = df.drop(columns={self.data.name_target})
 
-        print('ALERT: Select features')
-        self._select_features(df.copy(), y, feat_num, feat_cat)
-        print(f'Numeric Feature Selected >>>> {feat_num}')
-        print(f'Categoric Feature Selected >>>> {feat_cat}')
+        if self.rfe:
+            print('ALERT: Select features')
+            self._select_features(df.copy(), y, feat_num, feat_cat)
+            print(f'Numeric Feature Selected >>>> {feat_num}')
+            print(f'Categoric Feature Selected >>>> {feat_cat}')
 
         print('Feature fit and transform in train dataframe')
         self.scaler = StandardScaler()
