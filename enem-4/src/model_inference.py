@@ -10,7 +10,7 @@ from joblib import dump, load
 
 class ModelInference:
     def __init__(self, model=None):
-        self.modelo = load('../output/modelo.pkl') if model is None else model
+        self.modelo = load('../output/model.pkl') if model is None else model
         # TODO implementar classe de testes unitários
         '''
         :param model: Model_training object training return

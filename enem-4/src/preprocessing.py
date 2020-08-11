@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 
 class Preprocessing:
-    def __init__(self, data, col_analise=None, rfe=None, pca=None ):
+    def __init__(self, data, manual_feat=None, auto_feat=(0,100), rfe=None, pca=None ):
         self.features_categoric = None
         self.features_numeric = None
         self.scaler = None
@@ -16,26 +16,37 @@ class Preprocessing:
         self.data = data
         self.rfe = rfe
         self.pca = pca
-        self.col_analise = col_analise
+        self.manual_feat = manual_feat
+        self.missing_values_acceptable = auto_feat[0]
+        self.unique_values_acceptable = auto_feat[1]
         '''
         Class for preprocessing data model.
         :param data: DataSource object
         :param rfe: String with estimator: 'LR' or 'DT' for LinearRegression or DecisionTreeRegressor
         :param pca: Int, Float. Int for n_components to keep and Float for percetage specified by n_components
-        :param col_analise: List with: col_name : String,
+        :param manual_feat: List with: col_name : String,
                                         var_type : None, 'cat' or 'num'
                                         fillna : Int or Float,
                                         encode : Bool,
                                         drop_first : Bool
+        :param auto_feat: List with [0] is Int with minimum missing values acceptable percentage and
+                                    [1] is Int with maximum unique values acceptable percentage
         :return: Preprocessed object
         '''
 
-    def get_feature_names(self):
+    def get_name_features(self):
         '''
         Get all features names for model
-        :return: All features names (categoric + numeric)
+        :return: List[String] with categoric + numeric features names
         '''
         return self.features_numeric + self.features_categoric
+
+    def get_name_target(self):
+        '''
+        Get target name from data source
+        :return: String target name
+        '''
+        return self.data.name_target    
 
     def _preprocess_manual(self, df):
         '''
@@ -47,7 +58,7 @@ class Preprocessing:
         features_numeric = list()
         features_categoric = list()
 
-        for col in self.col_analise:
+        for col in self.manual_feat:
             if col[var_type]:
                 feature = features_categoric if col[var_type] == 'cat' else features_numeric
                 print(f'use: {col[name]}')
@@ -73,7 +84,7 @@ class Preprocessing:
                 print(f'drop: {col[name]}')
         return df, features_numeric, features_categoric
 
-    def _preprocess_auto(self, df, missing_values_acceptable, unique_values_acceptable):
+    def _preprocess_auto(self, df):
         '''
         Automatically preprocess dataframe setting categoric and numeric features
         :param df: Dataframe
@@ -90,16 +101,16 @@ class Preprocessing:
         print(df_meta[['missing_perc', 'unique_perc', 'dtype']].round(2))
 
         print(
-            f'ALERT: Droping columns with missing values > {missing_values_acceptable}% :')
+            f'ALERT: Droping columns with missing values > {self.missing_values_acceptable}% :')
         print(df_meta[df_meta['missing_perc'] >
-                      missing_values_acceptable]['missing_perc'])
-        df_meta = df_meta[df_meta['missing_perc'] <= missing_values_acceptable]
+                      self.missing_values_acceptable]['missing_perc'])
+        df_meta = df_meta[df_meta['missing_perc'] <= self.missing_values_acceptable]
 
         print(
-            f'ALERT: Droping columns with unique values >= {unique_values_acceptable}% :')
+            f'ALERT: Droping columns with unique values >= {self.unique_values_acceptable}% :')
         print(df_meta[df_meta['unique_perc'] >=
-                      unique_values_acceptable]['unique_perc'])
-        df_meta = df_meta[df_meta['unique_perc'] < unique_values_acceptable]
+                      self.unique_values_acceptable]['unique_perc'])
+        df_meta = df_meta[df_meta['unique_perc'] < self.unique_values_acceptable]
 
         #print('ALERT: Creating list with numeric features:')
         features_numeric = list(df_meta[(df_meta['dtype'] == 'int64') | (
@@ -132,6 +143,7 @@ class Preprocessing:
         if self.pca:
             pca = PCA(self.pca).fit(df[feat_num+feat_cat])
             n_components = pca.n_components_
+            print(f"ALERT: Numero de componentes selecionados PCA é {n_components}")
         else:
             n_components = int(len(feat_num+feat_cat)/2)
 
@@ -139,15 +151,15 @@ class Preprocessing:
 
         selection = RFE(model, n_features_to_select=n_components)
         selection.fit(df[feat_num+feat_cat], y=y)
-        selected = df[feat_num +
+        feat_selected = df[feat_num +
                       feat_cat].columns[selection.get_support()]
         
         for feat in feat_num:
-            if feat not in selected:
+            if feat not in feat_selected:
                 feat_num.remove(feat)
 
         for feat in feat_cat:
-            if feat not in selected:
+            if feat not in feat_selected:
                 feat_cat.remove(feat)
 
         return feat_num, feat_cat
@@ -182,7 +194,7 @@ class Preprocessing:
         self.features_numeric = feat_num
         self.features_categoric = feat_cat
 
-        return df[self.get_feature_names()], y
+        return df[self.get_name_features()], y
 
     def _process_test(self, df):
         '''
@@ -196,25 +208,20 @@ class Preprocessing:
         df[self.features_categoric] = self.catb.transform(
             df[self.features_categoric])
 
-        return df[self.get_feature_names()]
+        return df[self.get_name_features()]
 
-    def process(self, is_train_stage=True,
-                missing_values_acceptable=0,
-                unique_values_acceptable=100):
+    def process(self, is_train_stage=True):
         '''
         Process data for training the model.
         :param etapa_treino: Boolean
-        :param missing_values_acceptable: Int with minimum missing values acceptable percentage
-        :param unique_values_acceptable: Int with maximum unique values acceptable percentage
         :return: processed Pandas Data Frame, and target if train stage
         '''
         df = self.data.read_data(is_train_stage)
 
-        if self.col_analise:
+        if self.manual_feat:
             df, feat_num, feat_cat = self._preprocess_manual(df)
         else:
-            feat_num, feat_cat = self._preprocess_auto(
-                df, missing_values_acceptable, unique_values_acceptable)
+            feat_num, feat_cat = self._preprocess_auto(df)
 
         # TODO deletar quando o PCA estiver funcionando
         #if 'TP_ESCOLA_4' in feat_cat:

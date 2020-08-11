@@ -2,21 +2,22 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+from experiments import Experiments
 from joblib import dump, load
 
 #from data_source import DataSource
 #from preprocessing import Preprocessing
-#from experiments import Experiments
 
 
 class ModelTraining:
-    def __init__(self, preprocessing, model_training=None):
+    def __init__(self, preprocessing, regression=True, seed=42):
         self.pre = preprocessing
-        self.model_training = model_training
-        # TODO separar dados de Teste dos dados de Treino
+        self.regression = regression
+        self.seed = seed
         '''
         :param preprocessing: Preprocessing object
-        :param model_training: String with model training type: 'LR' or 'RF' for LinearRegression or RandomForestRegressor
+        :param regression: Boolean representing the training model: True for Regression or False for Classification
+        :param seed: Int with seed to random functions
         '''
 
     def training(self):
@@ -26,20 +27,24 @@ class ModelTraining:
         '''
 
         print('Training preprocessing')
-        X_train, y_train = self.pre.process()
-
-        #print(f'Y_train : \n {y_train}\n')
-        #print(f'X_train : \n {X_train}\n')
+        df_train, y = self.pre.process()
 
         print('Training Model')
-        # TODO linkar com a classe de experimentos para retornar o algoritmo de melhor desempenho
-        model_obj = RandomForestRegressor() if self.model_training == 'RF' else LinearRegression()
-        model_obj.fit(X_train, y_train)
+        exp = Experiments(regression=self.regression)
+        df_metrics = exp.run_experiment(df_train, y, seed=self.seed)
+        print('Metrics:', df_metrics)
+
+        alg_better = df_metrics[df_metrics.r_2_score ==
+                                df_metrics.r_2_score.max()].index[0]
+        print('ALERT: chosen algorithm: ',alg_better)
+
+        model_obj = exp.get_model(alg_better)
+        model_obj.fit(df_train, y)
         model = {'model_obj': model_obj,
                  'preprocessing': self.pre,
-                 'colunas': self.pre.get_feature_names()}
+                 'colunas': self.pre.get_name_features()}
 
         # print(model)
-        dump(model, '../output/modelo.pkl')
+        dump(model, '../output/model.pkl')
 
         return model
